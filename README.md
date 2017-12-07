@@ -67,10 +67,14 @@ defmodule Plug.Support.Router do
 end
 
 ```
-What we have here is a single route `/users/:id`.
-We want to validate `:id` is actually an integer before running an Ecto query on the value.
-We also want to validate that the `active` query param represents a valid boolean: `"true"`, or `"false"`
-All we had to do is declare the validation we want to have in the following format:
+The example shows a single route `/users/:id`.
+
+We want to make two validations on the route:
+
+1. Validate the `:id` path parameter is a valid integer
+2. Validate the `active` query parameter represents a valid boolean: `"true"`, or `"false"`
+
+All we had to do is declare the validations we want to perform in the following format:
 
 ```elixir
 %{validate: %{param_name_1: validation_function_1, ... param_name_n: validation_function_n}}
