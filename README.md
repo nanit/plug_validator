@@ -14,6 +14,8 @@ def deps do
 end
 ```
 
+Hex docs can be found [here](https://hexdocs.pm/plug_validator/0.1.0/Plug.Validator.html)
+
 ## Usage
 
 Let's take a look at the following Router:
