@@ -31,9 +31,8 @@ defmodule Plug.Support.Router do
       nil -> false
       "true" -> true
       "false" -> false
-      other -> {:error, "could not parse #{v} as boolean"}
+      _other -> {:error, "could not parse #{v} as boolean"}
     end
   end
-
   
 end
