@@ -1,6 +1,6 @@
 # PlugValidator
 
-**TODO: Add description**
+A Plug to validate input path/query params on your routers
 
 ## Installation
 
