@@ -1,11 +1,10 @@
-# PlugValidator
+# Plug.Validator
 
 A Plug to validate input path/query params on your routers
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `plug_validator` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `plug_validator` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
