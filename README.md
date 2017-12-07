@@ -118,7 +118,7 @@ Two reasons why this is important:
 1. Before `plug :match` is called we don't have path_params on `conn`
 2. You want to validate right after the match has been done to avoid running your code on false inputs as soon as possible
 
-# Contribution
+# Contributions
 
 Are welcome :)
 
