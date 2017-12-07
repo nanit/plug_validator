@@ -1,6 +1,6 @@
 # Plug.Validator
 
-A Plug to validate input path/query params on your routers
+A minimal Plug to validate input path/query params in declarative way on your routers.
 
 ## Installation
 
