@@ -1,10 +1,9 @@
 defmodule Plug.Validator do
-
   @moduledoc ~S"""
   A minimal Plug to validate input path/query params in declarative way on your routers.
 
   ## Installation
-  
+
   The package can be installed by adding `plug_validator` to your list of dependencies in `mix.exs`:
 
   ```elixir
@@ -121,6 +120,7 @@ defmodule Plug.Validator do
   """
 
   alias Plug.Conn
+
   @doc ~S"""
   Init the Plug.Validator with an error callback
 
@@ -147,7 +147,8 @@ defmodule Plug.Validator do
 
   defp validate(conn, validations, on_error) do
     errors = collect_errors(conn, validations)
-    if Enum.empty? errors do
+
+    if Enum.empty?(errors) do
       conn
     else
       on_error.(conn, errors)
@@ -159,13 +160,13 @@ defmodule Plug.Validator do
   end
 
   defp errors_collector(conn) do
-    fn {field, vf}, acc -> 
+    fn {field, vf}, acc ->
       value = conn.params[Atom.to_string(field)]
+
       case vf.(value) do
         {:error, msg} -> Map.put(acc, field, msg)
         _ -> acc
       end
     end
   end
-
 end
