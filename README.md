@@ -14,9 +14,28 @@ def deps do
 end
 ```
 
+And now don't forget to run `mix deps.get`.
+
 Hex docs can be found [here](https://hexdocs.pm/plug_validator/0.1.0/Plug.Validator.html)
 
 ## Usage
+
+Let's use a single route `/users/:id` as an example on how we can do in-line validations in a per route basis.
+
+We want to make two validations on the route:
+
+1. Validate the `:id` path parameter is a valid integer
+2. Validate the `active` query parameter represents a valid boolean: `"true"`, or `"false"`
+
+All we had to do is declare on the route the validations we want to perform in the following format:
+
+```elixir
+%{validate: %{param_name_1: validation_function_1, ... param_name_n: validation_function_n}}
+```
+
+So let's see how to apply this in an Elixir and Phoenix project.
+
+### Elixir Project
 
 Let's take a look at the following Router:
 
@@ -64,24 +83,114 @@ defmodule Plug.Support.Router do
   defp json_resp(conn, status, body) do
     conn |> put_resp_header("content-type", "application/json") |> send_resp(status, Poison.encode!(body))
   end
-  
+
 end
 
 ```
-The example shows a single route `/users/:id`.
 
-We want to make two validations on the route:
+#### Plug Positioning
 
-1. Validate the `:id` path parameter is a valid integer
-2. Validate the `active` query parameter represents a valid boolean: `"true"`, or `"false"`
+Pay attention to place the plug right after the call to `plug :match`
 
-All we had to do is declare the validations we want to perform in the following format:
+Two reasons why this is important:
+
+1. Before `plug :match` is called we don't have path_params on `conn`
+2. You want to validate right after the match has been done to avoid running your code on false inputs as soon as possible
+
+
+### Phoenix Project
+
+Let's take a look at the following Router:
 
 ```elixir
-%{validate: %{param_name_1: validation_function_1, ... param_name_n: validation_function_n}}
+defmodule ExampleWeb.Router do
+  use ExampleWeb, :router
+  require Logger
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+
+    # Add the plug validator
+    plug Plug.Validator, on_error: &ExampleWeb.Router.on_error_fn/2
+  end
+
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
+  scope "/", ExampleWeb do
+    pipe_through :browser
+
+    get "/", PageController, :index
+
+    # Enable the plug validator check per route
+    get "/users/:id",
+        UserController,
+        :show,
+        private: %{
+          validate: %{
+            id: &Example.Validator.validate_integer/1,
+            active: &Example.Validator.validate_boolean/1
+          }
+        }
+
+    # Enable the plug validator for a live route
+    live "/products/:id",
+         ProductsLive,
+         private: %{
+           validate: %{
+             id: &Example.Validator.validate_integer/1,
+             active: &Example.Validator.validate_boolean/1
+           }
+         }
+  end
+
+  # This callback is called in case a validation failed
+  def on_error_fn(conn, errors) do
+    Logger.error(
+      "#{__MODULE__} failed to validate route #{conn.request_path} params: #{inspect(errors)}"
+    )
+
+    conn
+    |> put_status(:not_found)
+    |> put_view(ExampleWeb.ErrorView)
+    |> render("404.html")
+    |> halt()
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api", ExampleWeb do
+  #   pipe_through :api
+  # end
+end
+
+# The dedicated module for validations
+defmodule Example.Validator do
+  # Two examples for validation functions
+
+  def validate_integer(v) do
+    case Integer.parse(v) do
+      :error -> {:error, "could not parse #{v} as integer"}
+      other -> other
+    end
+  end
+
+  def validate_boolean(v) do
+    case v do
+      nil -> false
+      "true" -> true
+      "false" -> false
+      _other -> {:error, "could not parse #{v} as boolean"}
+    end
+  end
+end
 ```
 
-To the route declaration.
+> **NOTE**: This is a full working Phoenix router from a fresh `mix phx.new example --no-ecto`, running on Phoenix `1.4.11` and Elixir `1.9.4`.
 
 ## Validator Functions
 
@@ -110,15 +219,6 @@ It is your responsibility to implement it and supply it as the `on_error` option
 
 You error callback will be called on the `conn` object and the errors map.
 The above implementation, `on_error_fn`, just returns a `422` status code with the errors map as body.
-
-## Plug Positioning
-
-Pay attention to place the plug right after the call to `plug :match`
-
-Two reasons why this is important:
-
-1. Before `plug :match` is called we don't have path_params on `conn`
-2. You want to validate right after the match has been done to avoid running your code on false inputs as soon as possible
 
 # Contributions
 
